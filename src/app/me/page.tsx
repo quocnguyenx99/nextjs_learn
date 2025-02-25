@@ -1,36 +1,45 @@
+import Profile from "@/app/me/profile";
 import envConfig from "@/config";
 import { cookies } from "next/headers";
+
 export default async function MeProfile() {
   const cookieStore = await cookies();
-  const sessionToken = cookieStore.get("sessionToken");
-
-  console.log(sessionToken);
+  const sessionToken = cookieStore.get("sessionToken")?.value;
 
   if (!sessionToken) {
-    throw new Error("Session token is missing");
+    console.error("Không tìm thấy sessionToken");
+    return <div>Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.</div>;
   }
 
-  const result = await fetch(
-    `${envConfig.NEXT_PUBLIC_API_ENDPOINT}/account/me`,
-    {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${sessionToken.value}`,
-      },
+  try {
+    const response = await fetch(
+      `${envConfig.NEXT_PUBLIC_API_ENDPOINT}/account/me`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${sessionToken}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        `Lỗi ${response.status}: ${data.message || "Không xác định"}`
+      );
     }
-  ).then(async (res) => {
-    const payload = await res.json();
-    const data = {
-      status: res.status,
-      payload,
-    };
 
-    if (!res.ok) {
-      throw data;
-    }
-
-    return data;
-  });
-
-  return <div>me profile</div>;
+    return (
+      <>
+        <h1>Profile</h1>
+        <div>Xin chào, {data.data.name}</div>
+        <Profile />
+      </>
+    );
+  } catch (error) {
+    console.error("Lỗi khi gọi API /account/me:", error);
+    return <div>Lỗi khi tải dữ liệu. Vui lòng thử lại.</div>;
+  }
 }

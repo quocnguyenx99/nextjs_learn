@@ -15,11 +15,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { LoginBody, LoginBodyType } from "@/schemaValidations/auth.schema";
 import envConfig from "@/config";
-
 import { useToast } from "@/hooks/use-toast";
+import { useAppContext } from "@/app/AppProvider";
 
 function LoginForm() {
   const { toast } = useToast();
+  const { setSessionToken } = useAppContext();
+
   const form = useForm<LoginBodyType>({
     resolver: zodResolver(LoginBody),
     defaultValues: {
@@ -75,7 +77,10 @@ function LoginForm() {
 
         return data;
       });
-      console.log(resultFromNextServer);
+
+      console.log(">>>check resultFromNextServer", resultFromNextServer);
+
+      setSessionToken(resultFromNextServer.payload.data.token);
     } catch (error: any) {
       const errors = error.payload?.errors as {
         field: string;
