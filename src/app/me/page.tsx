@@ -13,12 +13,12 @@ export default async function MeProfile() {
   }
 
   try {
-    const response = await accountApiRequest.me(sessionToken);
+    // const response = await accountApiRequest.me(sessionToken);
 
     return (
       <>
         <h1>Profile</h1>
-        <div>Xin chào, {response.payload.data.name}</div>
+        {/* <div>Xin chào, {response.payload.data.name}</div> */}
         <Profile />
       </>
     );

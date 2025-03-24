@@ -1,5 +1,6 @@
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import Link from "next/link";
+import ButtonLogout from "./button-logout";
 
 function Header() {
   return (
@@ -10,6 +11,9 @@ function Header() {
         </li>
         <li>
           <Link href={"/register"}>Đăng ký</Link>
+        </li>
+        <li>
+          <ButtonLogout/>
         </li>
       </ul>
 
