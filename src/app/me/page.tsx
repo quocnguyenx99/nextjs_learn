@@ -1,3 +1,4 @@
+import accountApiRequest from "@/apiRequests/account";
 import Profile from "@/app/me/profile";
 import envConfig from "@/config";
 import { cookies } from "next/headers";
@@ -12,29 +13,12 @@ export default async function MeProfile() {
   }
 
   try {
-    const response = await fetch(
-      `${envConfig.NEXT_PUBLIC_API_ENDPOINT}/account/me`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${sessionToken}`,
-        },
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        `Lỗi ${response.status}: ${data.message || "Không xác định"}`
-      );
-    }
+    const response = await accountApiRequest.me(sessionToken);
 
     return (
       <>
         <h1>Profile</h1>
-        <div>Xin chào, {data.data.name}</div>
+        <div>Xin chào, {response.payload.data.name}</div>
         <Profile />
       </>
     );
