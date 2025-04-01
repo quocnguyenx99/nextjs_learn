@@ -1,4 +1,14 @@
+import { decodeJWT } from "@/lib/utils";
 import { cookies } from "next/headers";
+
+type PayloadJWT = {
+  iat: number;
+  exp: number;
+  tokenType:string;
+  userId: number
+}
+
+
 
 export async function POST(request: Request) {
   const cookieStore = await cookies();
@@ -11,11 +21,17 @@ export async function POST(request: Request) {
       return Response.json({ message: "Token not found" }, { status: 400 });
     }
 
+    const payload = decodeJWT<PayloadJWT>(sessionToken);
+    const expiresDate = new Date(payload.exp * 1000).toUTCString();
+
     cookieStore.set({
       name: "sessionToken",
       value: sessionToken,
       path: "/",
       httpOnly: true,
+      expires: new Date(expiresDate),
+      sameSite: 'lax',
+      secure:true
     });
 
     return Response.json(
@@ -29,3 +45,4 @@ export async function POST(request: Request) {
     );
   }
 }
+

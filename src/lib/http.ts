@@ -1,13 +1,14 @@
 import envConfig from "@/config";
 import { LoginResType } from "@/schemaValidations/auth.schema";
 import { normalizePath } from "./utils";
+import { redirect } from "next/navigation";
 
 type CustomOptions = RequestInit & {
   baseUrl?: string | undefined;
 };
 
 const ENTITY_ERROR_STATUS = 422;
-const AUTHENTICATION_STATUS = 401;
+const AUTHENTICATION_ERROR_STATUS = 401;
 
 type EntityErrorPayload = {
   message: string;
@@ -68,6 +69,8 @@ class SessionToken {
 
 export const clientSessionToken = new SessionToken();
 
+let clientLogoutRequest: null | Promise<any> = null
+
 const request = async <T>(
   method: "GET" | "POST" | "PUT" | "DELETE",
   url: string,
@@ -117,20 +120,32 @@ const request = async <T>(
           payload: EntityErrorPayload;
         }
       );
-    } else if (res.status === AUTHENTICATION_STATUS) {
-      if (typeof window !== "undefined") {
-        await fetch("api/auth/logout", {
-          method: "POST",
-          body: JSON.stringify({ force: true }),
-          headers: {
-            ...baseHeaders,
-          },
-        });
-        clientSessionToken.value = "";
-        console.log("Đã đăng xuât");
+    } else if (res.status === AUTHENTICATION_ERROR_STATUS) {
+      if (res.status === AUTHENTICATION_ERROR_STATUS) {
+        
+        if (typeof window !== "undefined") {
+          // Xử lý lỗi xác thực ở client-side
+          if (!clientLogoutRequest) {
+            clientLogoutRequest = fetch("api/auth/logout", {
+              method: "POST",
+              body: JSON.stringify({ force: true }),
+              headers: {
+                ...baseHeaders,
+              },
+            });
+            await clientLogoutRequest;
+            clientSessionToken.value = "";
+            
+            location.href = '/login'
+          }
+        } else {
+          // Xử lý lỗi xác thực ở server-side
 
-        // location.href = "/login";
-      }
+          const sessionToken = (options?.headers as any)?.Authorization.split('Bearer ')[1]
+          redirect(`/logout?sessionToken=${sessionToken}`)
+        }
+      } 
+
     } else {
       throw new HttpError(data);
     }
